@@ -1,4 +1,4 @@
-# ЛР1-ЛР2. Анализ данных и MLflow для предсказания цены автомобиля
+# ЛР1-ЛР3. Анализ данных, MLflow и сервис предсказания цены автомобиля
 
 ## Описание проекта
 
@@ -8,6 +8,7 @@
 
 - ЛР1: разведочный анализ, очистка данных и сохранение подготовленного датасета.
 - ЛР2: построение baseline-модели, генерация признаков, отбор признаков, тюнинг гиперпараметров, логирование экспериментов в MLflow и подготовка Production-модели для следующей лабораторной работы.
+- ЛР3: подготовка FastAPI-сервиса, выгрузка Production-модели из MLflow и контейнеризация сервиса через Docker.
 
 ## Запуск
 
@@ -104,6 +105,87 @@ python research/train_tuned_model.py
 python research/train_production_model.py
 ```
 
+### 9. Подготовка модели для сервиса
+
+Перед запуском сервиса нужно выгрузить Production-модель из MLflow:
+
+```powershell
+python services/models/get_model.py
+```
+
+После этого в директории `services/models` должен появиться файл `model.pkl`.
+
+### 10. Локальный запуск FastAPI-сервиса
+
+```powershell
+python -m uvicorn services.ml_service.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+После запуска документация доступна по адресу:
+
+- `http://127.0.0.1:8000/docs`
+- `http://localhost:8000/docs`
+
+### 11. Сборка Docker-образа сервиса
+
+Команды выполняются из директории `services/ml_service`.
+
+```powershell
+cd services/ml_service
+docker build -t car-price-service:1 .
+```
+
+### 12. Запуск контейнера
+
+Проверенная команда для PowerShell:
+
+```powershell
+docker run --rm -p 8000:8000 -v "$((Resolve-Path ..\models).Path):/models" car-price-service:1
+```
+
+Альтернативная команда для Git Bash:
+
+```bash
+docker run --rm -p 8000:8000 -v "$(pwd)/../models:/models" car-price-service:1
+```
+
+После запуска контейнера сервис доступен по адресу `http://localhost:8000/docs`.
+
+### 13. Проверка работоспособности сервиса
+
+Откройте `http://localhost:8000/docs`, выберите endpoint `POST /api/prediction/{item_id}` и выполните тестовый запрос.
+Если сервис работает корректно, Swagger UI откроется без ошибок, а endpoint вернёт JSON с `item_id` и предсказанным значением `predict`.
+
+Пример `item_id`:
+
+```text
+123
+```
+
+Пример тела запроса:
+
+```json
+{
+  "Car_Name": "ritz",
+  "Year": 2014,
+  "Present_Price": 5.59,
+  "Driven_kms": 27000,
+  "Fuel_Type": "Petrol",
+  "Selling_type": "Dealer",
+  "Transmission": "Manual",
+  "Owner": 0
+}
+```
+
+Пример ответа:
+
+```json
+{
+  "item_id": 123,
+  "predict": 3.6582407176157177
+}
+```
+
 ## Структура проекта
 
 - `data/car_data.csv` - исходный датасет.
@@ -123,6 +205,13 @@ python research/train_production_model.py
 - `research/tuning_trials.csv` - история trials при тюнинге.
 - `research/best_tuned_params.txt` - лучшие найденные гиперпараметры.
 - `mlflow/start_mlflow.sh` - запуск локального MLflow server.
+- `services/ml_service/main.py` - FastAPI-приложение с endpoint-ами сервиса.
+- `services/ml_service/api_handler.py` - обработчик запросов, который загружает модель и делает предсказание.
+- `services/ml_service/common.py` - вспомогательный класс `FeatureIndexSelector`, необходимый для загрузки сериализованной модели.
+- `services/ml_service/requirements.txt` - минимальный набор зависимостей для сборки Docker-образа сервиса.
+- `services/ml_service/Dockerfile` - описание контейнера для запуска сервиса.
+- `services/models/get_model.py` - выгрузка Production-модели из MLflow в локальный файл.
+- `services/models/model.pkl` - локальная копия Production-модели для сервиса.
 - `requirements.txt` - актуальный список зависимостей.
 
 ## Результаты и выводы EDA
@@ -214,6 +303,25 @@ python research/train_production_model.py
 - пример входных данных
 - `requirements.txt`
 - список используемых столбцов
+
+## Сервис предсказания
+
+Сервис развёрнут на `FastAPI` и принимает признаки автомобиля в теле запроса, после чего возвращает предсказанную цену продажи.
+
+Содержимое `services/ml_service`:
+
+- `main.py` - основной модуль FastAPI с endpoint-ами `/`, `/health` и `/api/prediction/{item_id}`.
+- `api_handler.py` - класс `FastAPIHandler`, который загружает модель и выполняет предсказание.
+- `common.py` - вспомогательный класс `FeatureIndexSelector`, необходимый для корректной загрузки сериализованной модели.
+- `requirements.txt` - минимальные зависимости, нужные именно для контейнера сервиса.
+- `Dockerfile` - инструкция по сборке образа и запуску сервиса в контейнере.
+
+Содержимое `services/models`:
+
+- `get_model.py` - скрипт выгрузки Production-модели из MLflow по `run_id`.
+- `model.pkl` - локально сохранённая модель, которая монтируется в контейнер в volume `/models`.
+
+Сервис использует Production-модель из MLflow с run id `6e05235bc5aa464db3d168d2249fbb42`.
 
 ## Что важно поддерживать актуальным
 
