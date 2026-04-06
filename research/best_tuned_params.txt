@@ -1,0 +1,7 @@
+optimization_metric=mae
+optimization_direction=minimize
+n_trials=10
+best_mae_cv=0.766113
+n_estimators=51
+max_depth=15
+max_features=0.8189865423694109

@@ -1,0 +1,25 @@
+num_scaled__Year
+num_scaled__Present_Price
+num_scaled__Driven_kms
+num_poly__Year
+num_poly__Present_Price
+num_poly__Driven_kms
+num_poly__Year^2
+num_poly__Year Present_Price
+num_poly__Year Driven_kms
+num_poly__Present_Price^2
+num_poly__Present_Price Driven_kms
+num_poly__Driven_kms^2
+num_bins__Year_0.0
+num_bins__Year_1.0
+num_bins__Year_2.0
+num_bins__Year_3.0
+num_bins__Driven_kms_0.0
+num_bins__Driven_kms_1.0
+num_bins__Driven_kms_2.0
+num_bins__Driven_kms_3.0
+cat__Car_Name
+cat__Fuel_Type
+cat__Selling_type
+cat__Transmission
+cat__Owner

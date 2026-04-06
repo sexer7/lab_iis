@@ -1,13 +1,20 @@
-# Исключаем CSV файлы
+# Данные
 *.csv
-
-# Исключаем бинарные pickle файлы
 *.pkl
 
-# Исключаем виртуальные окружения
+# Виртуальные окружения
 .venv*/
 venv*/
 env*/
 
+# Временные и служебные файлы
 .tmp/
 .mplconfig/
+__pycache__/
+*.pyc
+
+# Артефакты MLflow
+mlflow/artifacts/
+mlflow/mlflow.db
+mlflow/mlruns.db
+mlruns.db

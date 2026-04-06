@@ -1,0 +1,10 @@
+num_scaled__Year
+num_poly__Year^2
+num_poly__Year Present_Price
+num_bins__Year_0.0
+num_bins__Year_1.0
+num_bins__Year_2.0
+num_bins__Year_3.0
+num_bins__Driven_kms_3.0
+cat__Car_Name
+cat__Fuel_Type

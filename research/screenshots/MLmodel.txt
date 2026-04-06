@@ -1,0 +1,39 @@
+artifact_path: file:C:/Users/mishu/Mohov/lab1/mlflow/artifacts/1/models/m-3e52985cb606493cb1e33f736379c58a/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.14.0
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.8.0
+    skops_trusted_types: null
+is_signature_from_type_hint: false
+mlflow_version: 3.10.1
+model_id: m-3e52985cb606493cb1e33f736379c58a
+model_size_bytes: 2347216
+model_uuid: m-3e52985cb606493cb1e33f736379c58a
+prompts: null
+run_id: 6e05235bc5aa464db3d168d2249fbb42
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "string", "name": "Car_Name", "required": true}, {"type": "long",
+    "name": "Year", "required": true}, {"type": "double", "name": "Present_Price",
+    "required": true}, {"type": "long", "name": "Driven_kms", "required": true}, {"type":
+    "string", "name": "Fuel_Type", "required": true}, {"type": "string", "name": "Selling_type",
+    "required": true}, {"type": "string", "name": "Transmission", "required": true},
+    {"type": "string", "name": "Owner", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2026-04-05 17:45:11.146787'
