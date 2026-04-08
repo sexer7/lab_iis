@@ -1,14 +1,36 @@
-# ЛР1-ЛР3. Анализ данных, MLflow и сервис предсказания цены автомобиля
+# ЛР1-ЛР4. ML-проект по предсказанию цены автомобиля
 
 ## Описание проекта
 
-Проект посвящён задаче регрессии: по характеристикам автомобиля нужно предсказать цену продажи `Selling_Price`.
+Проект посвящен задаче регрессии: по характеристикам автомобиля нужно предсказать цену продажи `Selling_Price`.
 
-На текущем этапе выполнены:
+За время работы над проектом были реализованы:
 
-- ЛР1: разведочный анализ, очистка данных и сохранение подготовленного датасета.
-- ЛР2: построение baseline-модели, генерация признаков, отбор признаков, тюнинг гиперпараметров, логирование экспериментов в MLflow и подготовка Production-модели для следующей лабораторной работы.
-- ЛР3: подготовка FastAPI-сервиса, выгрузка Production-модели из MLflow и контейнеризация сервиса через Docker.
+- разведочный анализ данных и очистка датасета;
+- построение baseline-модели и нескольких улучшенных версий;
+- логирование экспериментов и регистрация моделей в MLflow;
+- подготовка Production-модели;
+- разработка FastAPI-сервиса предсказаний;
+- контейнеризация сервиса через Docker;
+- генератор запросов для нагрузки на сервис;
+- мониторинг сервиса через Prometheus;
+- дашборд в Grafana для прикладного, инфраструктурного и модельного мониторинга.
+
+## Технологии и библиотеки
+
+В проекте использовались:
+
+- Python 3.11/3.14
+- pandas, numpy, seaborn, matplotlib, plotly
+- scikit-learn, mlxtend, optuna
+- Jupyter Notebook
+- MLflow
+- FastAPI, uvicorn
+- Docker, Docker Compose
+- Prometheus, Grafana
+- PromQL
+
+Этот стек покрывает полный цикл работы с ML-проектом: от анализа данных и обучения модели до упаковки, деплоя и мониторинга сервиса.
 
 ## Запуск
 
@@ -54,12 +76,9 @@ code .
 3. Выберите kernel `lab_iis (.venv)`.
 4. Запускайте ячейки по порядку.
 
-Основной исследовательский сценарий ЛР2 выполняется через `research/research.ipynb`.
-Файлы `research/*.py` оставлены как вспомогательные скрипты для воспроизводимого запуска тех же этапов без ноутбука.
-
 ### 6. Запуск MLflow
 
-Скрипт запуска находится в [mlflow/start_mlflow.sh](C:/Users/mishu/Mohov/lab1/mlflow/start_mlflow.sh).
+Скрипт запуска находится в `mlflow/start_mlflow.sh`.
 
 Команда для Git Bash:
 
@@ -75,37 +94,12 @@ cd mlflow
 python -m mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./artifacts --host 127.0.0.1 --port 5000 --workers 1
 ```
 
-После запуска интерфейс доступен по адресам:
+Веб-интерфейс MLflow:
 
 - `http://127.0.0.1:5000`
-- `http://localhost:5000/`
+- `http://localhost:5000`
 
-### 7. Выполнение ЛР2 через ноутбук
-
-Основной путь выполнения ЛР2:
-
-1. Запустите MLflow.
-2. Откройте `research/research.ipynb`.
-3. Выполняйте ячейки ноутбука последовательно:
-   baseline-модель;
-   модель с дополнительными признаками;
-   forward-отбор признаков;
-   подбор гиперпараметров;
-   подготовка финальной Production-модели.
-
-### 8. Скрипты для воспроизведения этапов ЛР2
-
-Если нужно повторить отдельные шаги без ноутбука, можно использовать скрипты:
-
-```powershell
-python research/train_baseline.py
-python research/train_featured_model.py
-python research/train_selected_model.py
-python research/train_tuned_model.py
-python research/train_production_model.py
-```
-
-### 9. Подготовка модели для сервиса
+### 7. Подготовка модели для сервиса
 
 Перед запуском сервиса нужно выгрузить Production-модель из MLflow:
 
@@ -113,48 +107,150 @@ python research/train_production_model.py
 python services/models/get_model.py
 ```
 
-После этого в директории `services/models` должен появиться файл `model.pkl`.
+После этого в `services/models` должен появиться файл `model.pkl`.
 
-### 10. Локальный запуск FastAPI-сервиса
+### 8. Локальный запуск сервиса предсказаний
 
 ```powershell
 python -m uvicorn services.ml_service.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-После запуска документация доступна по адресу:
+Swagger UI:
 
 - `http://127.0.0.1:8000/docs`
 - `http://localhost:8000/docs`
 
-### 11. Сборка Docker-образа сервиса
+### 9. Сборка и запуск Docker Compose-проекта
 
-Команды выполняются из директории `services/ml_service`.
+Файл оркестрации находится в `services/compose.yml`.
 
-```powershell
-cd services/ml_service
-docker build -t car-price-service:1 .
-```
-
-### 12. Запуск контейнера
-
-Проверенная команда для PowerShell:
+Сборка:
 
 ```powershell
-docker run --rm -p 8000:8000 -v "$((Resolve-Path ..\models).Path):/models" car-price-service:1
+cd services
+docker compose -f compose.yml build
 ```
 
-Альтернативная команда для Git Bash:
+Запуск:
 
-```bash
-docker run --rm -p 8000:8000 -v "$(pwd)/../models:/models" car-price-service:1
+```powershell
+docker compose -f compose.yml up
 ```
 
-После запуска контейнера сервис доступен по адресу `http://localhost:8000/docs`.
+Запуск в фоне:
 
-### 13. Проверка работоспособности сервиса
+```powershell
+docker compose -f compose.yml up -d
+```
+
+Остановка:
+
+```powershell
+docker compose -f compose.yml down
+```
+
+После запуска будут доступны:
+
+- ML-сервис: `http://localhost:8000/docs`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000`
+
+Для Grafana используются учетные данные:
+
+- логин: `admin`
+- пароль: `admin`
+
+## Структура проекта
+
+- `data/car_data.csv` - исходный датасет.
+- `data/car_data_cleaned.csv` - очищенный датасет после EDA.
+- `data/car_data_cleaned.pkl` - очищенный датасет в формате pickle.
+- `eda/eda.ipynb` - ноутбук с разведочным анализом данных.
+- `research/research.ipynb` - основной ноутбук с исследованиями и экспериментами ЛР2.
+- `research/common.py` - общие функции для пайплайнов, метрик и служебных операций.
+- `research/train_baseline.py` - baseline-модель.
+- `research/train_featured_model.py` - модель с новыми признаками из `sklearn`.
+- `research/train_selected_model.py` - модель с `mlxtend.SequentialFeatureSelector`.
+- `research/train_tuned_model.py` - тюнинг гиперпараметров через `Optuna`.
+- `research/train_production_model.py` - обучение Production-модели на всей выборке.
+- `mlflow/start_mlflow.sh` - запуск локального MLflow server.
+- `services/compose.yml` - сборка и запуск сервисов проекта через Docker Compose.
+
+## Сервис предсказания
+
+Сервис предсказаний развёрнут на `FastAPI` и принимает признаки автомобиля в теле запроса, после чего возвращает предсказанную цену продажи.
+
+Содержимое `services/ml_service`:
+
+- `main.py` - основной модуль FastAPI с endpoint-ами `/`, `/health`, `/metrics/` и `/api/prediction/{item_id}`.
+- `api_handler.py` - класс `FastAPIHandler`, который загружает модель и делает предсказание.
+- `common.py` - вспомогательный класс `FeatureIndexSelector`, необходимый для корректной загрузки сериализованной модели.
+- `requirements.txt` - минимальные зависимости для контейнера сервиса.
+- `Dockerfile` - описание контейнера для сервиса предсказаний.
+
+Содержимое `services/models`:
+
+- `get_model.py` - скрипт выгрузки Production-модели из MLflow по `run_id`.
+- `model.pkl` - локально сохранённая модель, которая монтируется в контейнер в volume `/models`.
+
+Сервис использует Production-модель из MLflow с `run_id = 6e05235bc5aa464db3d168d2249fbb42`.
+
+## Сервис генерации запросов
+
+Сервис `requests` нужен для генерации нагрузки на ML-сервис и "оживления" мониторинга.
+
+Содержимое `services/requests`:
+
+- `requests.py` - бесконечный цикл отправки запросов в ML-сервис через случайные промежутки времени от `0` до `5` секунд.
+- `requirements.txt` - минимальный набор зависимостей для контейнера сервиса запросов.
+- `Dockerfile` - описание контейнера для генератора запросов.
+
+По умолчанию сервис обращается к адресу `http://ml_service:8000`, что соответствует имени сервиса внутри `docker compose`.
+
+Часть запросов специально отправляется с ошибкой, чтобы в мониторинге появлялись метрики `4xx`.
+
+## Сервис Prometheus
+
+Prometheus отвечает за сбор и хранение метрик с ML-сервиса.
+
+Содержимое `services/prometheus`:
+
+- `prometheus.yml` - конфигурация scrape-задач.
+- `data/` - runtime-данные Prometheus.
+- `screenshots/` - сохранённые скриншоты из раздела мониторинга.
+
+Веб-интерфейс Prometheus:
+
+- `http://localhost:9090`
+
+С Prometheus собираются:
+
+- гистограмма значений предсказаний модели;
+- частота запросов к endpoint предсказаний;
+- количество запросов с кодами `4xx` и `5xx`;
+- инфраструктурные метрики процесса сервиса, например CPU и память.
+
+## Сервис Grafana
+
+Grafana отвечает за визуализацию метрик и дашборды.
+
+Содержимое `services/grafana`:
+
+- `dashboards/ml-service-monitoring.json` - экспортированный dashboard.
+- `provisioning/datasources/datasource.yml` - автоматическое подключение Prometheus как datasource.
+- `provisioning/dashboards/dashboard.yml` - автоматическая загрузка dashboard из файловой системы.
+- `screenshots/dashboard.png` - скриншот итогового дашборда.
+- `data/` - runtime-данные Grafana.
+
+Веб-интерфейс Grafana:
+
+- `http://localhost:3000`
+
+После запуска compose-проекта Grafana автоматически подхватывает datasource `Prometheus` и dashboard `ML Service Monitoring`.
+
+## Проверка работоспособности сервиса
 
 Откройте `http://localhost:8000/docs`, выберите endpoint `POST /api/prediction/{item_id}` и выполните тестовый запрос.
-Если сервис работает корректно, Swagger UI откроется без ошибок, а endpoint вернёт JSON с `item_id` и предсказанным значением `predict`.
 
 Пример `item_id`:
 
@@ -186,58 +282,48 @@ docker run --rm -p 8000:8000 -v "$(pwd)/../models:/models" car-price-service:1
 }
 ```
 
-## Структура проекта
+## Мониторинг
 
-- `data/car_data.csv` - исходный датасет.
-- `data/car_data_cleaned.csv` - очищенный датасет после EDA.
-- `data/car_data_cleaned.pkl` - очищенный датасет в формате pickle.
-- `eda/eda.ipynb` - ноутбук с разведочным анализом данных.
-- `research/research.ipynb` - основной ноутбук с исследованиями и экспериментами ЛР2.
-- `research/common.py` - общие функции для пайплайнов, метрик и служебных операций.
-- `research/train_baseline.py` - baseline-модель.
-- `research/train_featured_model.py` - модель с новыми признаками из `sklearn`.
-- `research/train_selected_model.py` - модель с `mlxtend.SequentialFeatureSelector`.
-- `research/train_tuned_model.py` - тюнинг гиперпараметров через `Optuna`.
-- `research/train_production_model.py` - обучение Production-модели на всей выборке.
-- `research/featured_feature_names.txt` - имена признаков после `fit_transform`.
-- `research/selected_feature_names.txt` - имена признаков, выбранных SFS.
-- `research/selected_feature_indices.txt` - индексы признаков, выбранных SFS.
-- `research/tuning_trials.csv` - история trials при тюнинге.
-- `research/best_tuned_params.txt` - лучшие найденные гиперпараметры.
-- `mlflow/start_mlflow.sh` - запуск локального MLflow server.
-- `services/ml_service/main.py` - FastAPI-приложение с endpoint-ами сервиса.
-- `services/ml_service/api_handler.py` - обработчик запросов, который загружает модель и делает предсказание.
-- `services/ml_service/common.py` - вспомогательный класс `FeatureIndexSelector`, необходимый для загрузки сериализованной модели.
-- `services/ml_service/requirements.txt` - минимальный набор зависимостей для сборки Docker-образа сервиса.
-- `services/ml_service/Dockerfile` - описание контейнера для запуска сервиса.
-- `services/models/get_model.py` - выгрузка Production-модели из MLflow в локальный файл.
-- `services/models/model.pkl` - локальная копия Production-модели для сервиса.
-- `requirements.txt` - актуальный список зависимостей.
+### Гистограмма предсказаний модели
 
-## Результаты и выводы EDA
 
-### Загрузка данных и знакомство с ними
+Этот график построен по histogram-метрике `car_price_prediction_value_bucket` и показывает распределение предсказаний модели по корзинам. Это уровень мониторинга качества модели: по нему можно увидеть, в каком диапазоне цен сервис чаще всего выдаёт предсказания.
 
-- Исходный датасет содержит `301` запись и `9` столбцов.
-- Числовые признаки: `Year`, `Present_Price`, `Driven_kms`.
-- Категориальные признаки: `Car_Name`, `Fuel_Type`, `Selling_type`, `Transmission`, `Owner`.
-- Целевая переменная: `Selling_Price`.
-- В исходном датасете средняя цена продажи составляет `4.66`, медианная `3.60`, диапазон значений от `0.10` до `35.00`.
+### Частота запросов к основному сервису в минуту
 
-### Очистка данных
+Этот график показывает интенсивность обращений к endpoint предсказаний. Он относится к прикладному уровню мониторинга и помогает понять, насколько активно используется сервис.
 
-- удалены `2` полных дубликата
-- проверены диапазоны значений для `Year`, `Driven_kms` и `Selling_Price`
-- проверены пропуски, пропущенных значений не обнаружено
-- признак `Owner` приведён к категориальному типу
+### Количество запросов с кодами ошибок 4xx и 5xx
 
-### Полезные закономерности
+Этот график показывает число ошибочных запросов. Метрики `4xx` отражают ошибки клиента, а `5xx` — ошибки сервера. Это прикладной уровень мониторинга, связанный со стабильностью API.
 
-- Наиболее сильная связь с целевой переменной наблюдается у `Present_Price`.
-- Более новые автомобили в среднем продаются дороже.
-- `Driven_kms` полезен в комбинации с другими признаками.
-- Автомобили с автоматической коробкой в среднем дороже.
-- Продажи через дилера в среднем дороже продаж от частных лиц.
+## Дашборд Grafana
+
+![Grafana Dashboard](services/grafana/screenshots/dashboard.png)
+
+На итоговом дашборде собраны пять графиков разных уровней мониторинга:
+
+1. `Prediction Request Rate`
+   Показывает количество запросов к сервису предсказаний в минуту.
+   Уровень мониторинга: прикладной.
+
+2. `Prediction Errors 4xx / 5xx`
+   Показывает количество ошибочных запросов по двум классам статусов.
+   Уровень мониторинга: прикладной.
+
+3. `Prediction Histogram Buckets`
+   Показывает распределение предсказаний модели по histogram-корзинам.
+   Уровень мониторинга: качество работы модели.
+
+4. `Service Memory Usage`
+   Показывает использование оперативной памяти процессом сервиса.
+   Уровень мониторинга: инфраструктурный.
+
+5. `Service CPU Usage`
+   Показывает загрузку CPU процессом сервиса.
+   Уровень мониторинга: инфраструктурный.
+
+Для "оживления" дашборда используется сервис `request_service`, который генерирует как корректные, так и ошибочные запросы к ML-сервису.
 
 ## Результаты исследования
 
@@ -276,17 +362,6 @@ docker run --rm -p 8000:8000 -v "$(pwd)/../models:/models" car-price-service:1
 - `cat__Car_Name`
 - `cat__Fuel_Type`
 
-### Тюнинг гиперпараметров
-
-Для лучшей модели был выполнен тюнинг через `Optuna` по `10` trials.
-
-- оптимизировались `n_estimators`, `max_depth`, `max_features`
-- в коде явно указано `direction="minimize"`, потому что `MAE` для регрессии нужно минимизировать
-- лучший CV trial: `best_cv_mae = 0.7661`
-- лучшие параметры trial: `n_estimators = 51`, `max_depth = 15`, `max_features = 0.8190`
-
-На тестовой выборке tuned-версия не улучшила `MAE` относительно лучшей SFS-модели, поэтому в Production взята именно модель из run `6d6108e1e17f425cb06afab37d7c53e0`.
-
 ### Production-модель
 
 Лучшая модель была переобучена на всей очищенной выборке и зарегистрирована как Production-версия.
@@ -294,37 +369,11 @@ docker run --rm -p 8000:8000 -v "$(pwd)/../models:/models" car-price-service:1
 - production run_id: `6e05235bc5aa464db3d168d2249fbb42`
 - зарегистрированная модель: `car-price-rf-featured-sfs`
 - версия в реестре: `3`
-- тэг версии: `status = Production`
+- тег версии: `status = Production`
 - alias модели: `Production`
-
-В Production-run залогированы:
-
-- сигнатура модели
-- пример входных данных
-- `requirements.txt`
-- список используемых столбцов
-
-## Сервис предсказания
-
-Сервис развёрнут на `FastAPI` и принимает признаки автомобиля в теле запроса, после чего возвращает предсказанную цену продажи.
-
-Содержимое `services/ml_service`:
-
-- `main.py` - основной модуль FastAPI с endpoint-ами `/`, `/health` и `/api/prediction/{item_id}`.
-- `api_handler.py` - класс `FastAPIHandler`, который загружает модель и выполняет предсказание.
-- `common.py` - вспомогательный класс `FeatureIndexSelector`, необходимый для корректной загрузки сериализованной модели.
-- `requirements.txt` - минимальные зависимости, нужные именно для контейнера сервиса.
-- `Dockerfile` - инструкция по сборке образа и запуску сервиса в контейнере.
-
-Содержимое `services/models`:
-
-- `get_model.py` - скрипт выгрузки Production-модели из MLflow по `run_id`.
-- `model.pkl` - локально сохранённая модель, которая монтируется в контейнер в volume `/models`.
-
-Сервис использует Production-модель из MLflow с run id `6e05235bc5aa464db3d168d2249fbb42`.
 
 ## Что важно поддерживать актуальным
 
 - При добавлении новых библиотек необходимо обновлять `requirements.txt`.
-- После изменения структуры проекта нужно актуализировать разделы `Запуск` и `Структура проекта`.
+- После изменения структуры проекта нужно актуализировать разделы `Запуск`, `Структура проекта`, `Мониторинг` и `Дашборд`.
 - README должен соответствовать текущему состоянию проекта на каждом коммите.

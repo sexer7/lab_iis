@@ -18,3 +18,9 @@ mlflow/artifacts/
 mlflow/mlflow.db
 mlflow/mlruns.db
 mlruns.db
+
+# Runtime-данные мониторинга
+services/prometheus/data/*
+!services/prometheus/data/.gitkeep
+services/grafana/data/*
+!services/grafana/data/.gitkeep
